@@ -32,6 +32,7 @@
     </stubs>
 
     <ignoreExceptions>
+        <class name="RuntimeException"/>
         <class name="InvalidArgumentException"/>
         <class name="Psr\Log\InvalidArgumentException"/>
     </ignoreExceptions>
