@@ -1,0 +1,42 @@
+{
+    "description": "Happy Inc Worker",
+    "name": "happy-inc/worker",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Happy Inc Tech Team",
+            "homepage": "https://github.com/happy-inc-tech"
+        }
+    ],
+    "require": {
+        "php": "^7.2",
+        "ext-pcntl": "*",
+        "psr/log": "^1.1"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.16",
+        "icanhazstring/composer-unused": "^0.7.3",
+        "maglnet/composer-require-checker": "^2.1",
+        "phpunit/phpunit": "^9.0",
+        "vimeo/psalm": "^3.11.4@dev"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "HappyInc\\Worker\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HappyInc\\Worker\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1-dev"
+        }
+    }
+}
