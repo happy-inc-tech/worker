@@ -43,7 +43,7 @@ final class FileStopSignaller
 
     private function fileContents(string $channel, bool $forceUpdate = false): string
     {
-        $file = sprintf('%s/%s.wsc', $this->dir, sha1($channel));
+        $file = sprintf('%s/%s.channel.tmp', $this->dir, sha1($channel));
 
         if (!$forceUpdate && false !== $value = @file_get_contents($file)) {
             return $value;
