@@ -27,10 +27,6 @@
         <Trace errorLevel="info"/>
     </issueHandlers>
 
-    <stubs>
-        <file name="psalm_stubs.php"/>
-    </stubs>
-
     <ignoreExceptions>
         <class name="RuntimeException"/>
         <class name="InvalidArgumentException"/>
