@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace HappyInc\Worker;
 
+/**
+ * @internal
+ */
 final class SigtermInterrupter
 {
     /**
