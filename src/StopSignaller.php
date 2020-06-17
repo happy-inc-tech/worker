@@ -6,7 +6,7 @@ namespace HappyInc\Worker;
 
 final class StopSignaller
 {
-    private const MAX_LENGTH = 21;
+    private const MAX_LENGTH = 26;
 
     /**
      * @var string
@@ -35,7 +35,7 @@ final class StopSignaller
         }
 
         ftruncate($handle, 0);
-        fwrite($handle, microtime());
+        fwrite($handle, (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s.u'));
         fflush($handle);
         flock($handle, LOCK_UN);
         fclose($handle);
