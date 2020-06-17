@@ -19,7 +19,7 @@ final class StopSignallerTest extends TestCase
     {
         $channel = 'channel';
         $signaller = new StopSignaller();
-        $context = new Context($this->createMock(LoggerInterface::class));
+        $context = $this->createContext();
         $interrupter = $signaller->createInterrupter($channel);
 
         $interrupter($context);
@@ -32,7 +32,7 @@ final class StopSignallerTest extends TestCase
         $channel = 'channel';
         $signaller = new StopSignaller();
         $signaller->sendStopSignal($channel);
-        $context = new Context($this->createMock(LoggerInterface::class));
+        $context = $this->createContext();
         $interrupter = $signaller->createInterrupter($channel);
 
         $interrupter($context);
@@ -44,12 +44,17 @@ final class StopSignallerTest extends TestCase
     {
         $channel = 'channel';
         $signaller = new StopSignaller();
-        $context = new Context($this->createMock(LoggerInterface::class));
+        $context = $this->createContext();
         $interrupter = $signaller->createInterrupter($channel);
 
         $signaller->sendStopSignal($channel);
         $interrupter($context);
 
         $this->assertTrue($context->isStopped());
+    }
+
+    private function createContext(): Context
+    {
+        return new Context(0, $this->createMock(LoggerInterface::class));
     }
 }

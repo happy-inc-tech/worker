@@ -10,38 +10,29 @@ use Psr\Log\LogLevel;
 final class Context
 {
     /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
      * @var int
      */
-    private $tick = 0;
+    private $tick;
 
     /**
      * @var bool
      */
     private $stopped = false;
 
-    public function __construct(LoggerInterface $logger)
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(int $tick, LoggerInterface $logger)
     {
+        $this->tick = $tick;
         $this->logger = $logger;
     }
 
-    public function tick(): int
+    public function getTick(): int
     {
         return $this->tick;
-    }
-
-    public function log(string $message, array $context = [], string $level = LogLevel::INFO): void
-    {
-        $this->logger->log($level, $message, $context);
-    }
-
-    public function stop(): void
-    {
-        $this->stopped = true;
     }
 
     public function isStopped(): bool
@@ -49,11 +40,13 @@ final class Context
         return $this->stopped;
     }
 
-    public function next(): self
+    public function stop(): void
     {
-        $next = new self($this->logger);
-        ++$next->tick;
+        $this->stopped = true;
+    }
 
-        return $next;
+    public function log(string $message, array $context = [], string $level = LogLevel::INFO): void
+    {
+        $this->logger->log($level, $message, $context);
     }
 }

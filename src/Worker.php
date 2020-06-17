@@ -44,11 +44,18 @@ final class Worker
         $this->sleepSeconds = $sleepSeconds;
     }
 
+    public function __invoke(): void
+    {
+        $this->run();
+    }
+
     public function run(): void
     {
-        $context = new Context($this->logger);
+        $tick = 0;
 
         while (true) {
+            $context = new Context($tick, $this->logger);
+
             foreach ($this->operations() as $operation) {
                 $operation($context);
 
@@ -58,13 +65,8 @@ final class Worker
             }
 
             sleep($this->sleepSeconds);
-            $context = $context->nextContext();
+            ++$tick;
         }
-    }
-
-    public function __invoke(): void
-    {
-        $this->run();
     }
 
     /**
