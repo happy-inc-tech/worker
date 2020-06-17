@@ -44,7 +44,7 @@ final class Worker
         $this->sleepSeconds = $sleepSeconds;
     }
 
-    public function __invoke(): void
+    public function run(): void
     {
         $context = new Context($this->logger);
 
@@ -58,8 +58,13 @@ final class Worker
             }
 
             sleep($this->sleepSeconds);
-            $context = $context->next();
+            $context = $context->nextContext();
         }
+    }
+
+    public function __invoke(): void
+    {
+        $this->run();
     }
 
     /**
