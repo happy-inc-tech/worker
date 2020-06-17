@@ -6,6 +6,8 @@ namespace HappyInc\Worker;
 
 final class StopSignaller
 {
+    private const MAX_LENGTH = 21;
+
     /**
      * @var string
      */
@@ -18,7 +20,25 @@ final class StopSignaller
 
     public function sendStopSignal(string $channel): void
     {
-        $this->fileContents($channel, true);
+        if (!is_dir($this->dir) && !@mkdir($this->dir, 0777, true)) {
+            throw new \RuntimeException(sprintf('Failed to create directory "%s".', $this->dir));
+        }
+
+        $file = $this->channelFile($channel);
+
+        if (false === $handle = @fopen($this->channelFile($channel), 'cb')) {
+            throw new \RuntimeException(sprintf('Failed to open file "%s" for writing.', $file));
+        }
+
+        if (!flock($handle, LOCK_EX)) {
+            throw new \RuntimeException(sprintf('Failed to acquire an exclusive lock for file "%s".', $file));
+        }
+
+        ftruncate($handle, 0);
+        fwrite($handle, microtime());
+        fflush($handle);
+        flock($handle, LOCK_UN);
+        fclose($handle);
     }
 
     /**
@@ -27,10 +47,11 @@ final class StopSignaller
      */
     public function createInterrupter(string $channel, ?callable $onStopped = null): callable
     {
-        $value = $this->fileContents($channel);
+        $file = $this->channelFile($channel);
+        $initialValue = @file_get_contents($file, false, null, 0, self::MAX_LENGTH);
 
-        return function (Context $context) use ($channel, $value, $onStopped): void {
-            if ($value === $this->fileContents($channel)) {
+        return static function (Context $context) use ($channel, $onStopped, $file, $initialValue): void {
+            if ($initialValue === @file_get_contents($file, false, null, 0, self::MAX_LENGTH)) {
                 return;
             }
 
@@ -43,24 +64,8 @@ final class StopSignaller
         };
     }
 
-    private function fileContents(string $channel, bool $forceUpdate = false): string
+    private function channelFile(string $channel): string
     {
-        $file = sprintf('%s/%s.channel.tmp', $this->dir, sha1($channel));
-
-        if (!$forceUpdate && false !== $value = @file_get_contents($file)) {
-            return $value;
-        }
-
-        if (!is_dir($this->dir) && !@mkdir($this->dir, 0777, true)) {
-            throw new \RuntimeException(sprintf('Failed to create directory "%s".', $this->dir));
-        }
-
-        $value = (string) time();
-
-        if (!@file_put_contents($file, $value)) {
-            throw new \RuntimeException(sprintf('Failed to write to "%s".', $file));
-        }
-
-        return $value;
+        return sprintf('%s/%s.worker_stop_signaller_channel.tmp', $this->dir, md5($channel));
     }
 }
