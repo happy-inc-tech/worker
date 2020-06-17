@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace HappyInc\Worker;
 
-use Psr\Log\LogLevel;
-
-final class FileStopSignaller
+final class StopSignaller
 {
-    private const DEFAULT_LOG_MESSAGE = 'Worker stopped after receiving a stop signal from channel {channel}.';
-
     /**
      * @var string
      */
@@ -26,17 +22,23 @@ final class FileStopSignaller
     }
 
     /**
+     * @psalm-param ?callable(Context): void $onStopped
      * @psalm-return callable(Context): void
      */
-    public function createInterrupter(string $channel, string $logMessage = self::DEFAULT_LOG_MESSAGE, array $logContext = [], string $logLevel = LogLevel::INFO): callable
+    public function createInterrupter(string $channel, ?callable $onStopped = null): callable
     {
         $value = $this->fileContents($channel);
 
-        return function (Context $context) use ($channel, $value, $logMessage, $logContext, $logLevel): void {
-            if ($value !== $this->fileContents($channel)) {
-                $context->stop();
-                $logContext['channel'] = $channel;
-                $context->log($logMessage, $logContext, $logLevel);
+        return function (Context $context) use ($channel, $value, $onStopped): void {
+            if ($value === $this->fileContents($channel)) {
+                return;
+            }
+
+            $context->stop();
+            $context->log('Worker stopped after receiving a stop signal from channel {channel}.', ['channel' => $channel]);
+
+            if (null !== $onStopped) {
+                $onStopped($context);
             }
         };
     }
