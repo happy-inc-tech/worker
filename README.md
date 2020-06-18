@@ -19,7 +19,7 @@ $worker = new Worker(
                 $context->stop();
                 $context->log(
                     'Worker was stopped after tick {tick}.', 
-                    ['tick' => $context->getTick()],
+                    ['tick' => $context->tick],
                     LogLevel::WARNING
                 );
             }
