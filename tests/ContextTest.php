@@ -16,20 +16,11 @@ use Psr\Log\LogLevel;
  */
 final class ContextTest extends TestCase
 {
-    public function testGetTick(): void
-    {
-        $tick = 109;
-
-        $context = new Context($tick, $this->createMock(LoggerInterface::class));
-
-        $this->assertSame($tick, $context->getTick());
-    }
-
     public function testInitiallyNotStopped(): void
     {
         $context = new Context(0, $this->createMock(LoggerInterface::class));
 
-        $this->assertFalse($context->isStopped());
+        $this->assertFalse($context->stopped);
     }
 
     public function testStop(): void
@@ -38,7 +29,7 @@ final class ContextTest extends TestCase
 
         $context->stop();
 
-        $this->assertTrue($context->isStopped());
+        $this->assertTrue($context->stopped);
     }
 
     public function testLog(): void

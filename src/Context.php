@@ -11,13 +11,15 @@ final class Context
 {
     /**
      * @var int
+     * @psalm-readonly
      */
-    private $tick;
+    public $tick;
 
     /**
      * @var bool
+     * @psalm-readonly-allow-private-mutation
      */
-    private $stopped = false;
+    public $stopped = false;
 
     /**
      * @var LoggerInterface
@@ -28,16 +30,6 @@ final class Context
     {
         $this->tick = $tick;
         $this->logger = $logger;
-    }
-
-    public function getTick(): int
-    {
-        return $this->tick;
-    }
-
-    public function isStopped(): bool
-    {
-        return $this->stopped;
     }
 
     public function stop(): void

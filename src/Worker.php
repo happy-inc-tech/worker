@@ -59,7 +59,7 @@ final class Worker
             foreach ($this->operations() as $operation) {
                 $operation($context);
 
-                if ($context->isStopped()) {
+                if ($context->stopped) {
                     return;
                 }
             }

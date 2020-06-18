@@ -24,7 +24,7 @@ final class StopSignallerTest extends TestCase
 
         $interrupter($context);
 
-        $this->assertFalse($context->isStopped());
+        $this->assertFalse($context->stopped);
     }
 
     public function testNotStoppedWhenCreatedAfterASignal(): void
@@ -37,7 +37,7 @@ final class StopSignallerTest extends TestCase
 
         $interrupter($context);
 
-        $this->assertFalse($context->isStopped());
+        $this->assertFalse($context->stopped);
     }
 
     public function testStoppedAfterASignal(): void
@@ -50,7 +50,7 @@ final class StopSignallerTest extends TestCase
         $signaller->sendStopSignal($channel);
         $interrupter($context);
 
-        $this->assertTrue($context->isStopped());
+        $this->assertTrue($context->stopped);
     }
 
     private function createContext(): Context
