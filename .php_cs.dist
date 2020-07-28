@@ -19,7 +19,6 @@ return
         ->setRules([
             '@PHP71Migration' => true,
             '@PHP71Migration:risky' => true,
-            '@PHP73Migration' => true,
             '@PhpCsFixer' => true,
             '@PhpCsFixer:risky' => true,
             '@PHPUnit60Migration:risky' => true,
