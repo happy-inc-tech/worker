@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace HappyInc\Worker;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * @internal
@@ -19,7 +19,7 @@ final class StopSignallerTest extends TestCase
     {
         $channel = 'channel';
         $signaller = new StopSignaller();
-        $context = $this->createContext();
+        $context = new Context(0, new NullLogger());
         $interrupter = $signaller->createInterrupter($channel);
 
         $interrupter($context);
@@ -32,7 +32,7 @@ final class StopSignallerTest extends TestCase
         $channel = 'channel';
         $signaller = new StopSignaller();
         $signaller->sendStopSignal($channel);
-        $context = $this->createContext();
+        $context = new Context(0, new NullLogger());
         $interrupter = $signaller->createInterrupter($channel);
 
         $interrupter($context);
@@ -44,17 +44,12 @@ final class StopSignallerTest extends TestCase
     {
         $channel = 'channel';
         $signaller = new StopSignaller();
-        $context = $this->createContext();
+        $context = new Context(0, new NullLogger());
         $interrupter = $signaller->createInterrupter($channel);
 
         $signaller->sendStopSignal($channel);
         $interrupter($context);
 
         $this->assertTrue($context->stopped);
-    }
-
-    private function createContext(): Context
-    {
-        return new Context(0, $this->createMock(LoggerInterface::class));
     }
 }
