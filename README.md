@@ -1,45 +1,34 @@
 # Happy Inc Worker
 
 ```php
-use HappyInc\Worker\Worker;
-use HappyInc\Worker\MemoryInterrupter;
-use HappyInc\Worker\StopSignaller;
-use HappyInc\Worker\Context;
-use Psr\Log\LogLevel;
+namespace HappyInc\Worker;
 
-$stopSignaller = new StopSignaller();
+$worker = WorkerBuilder
+    ::create(static function (WorkerTicked $context): void {
+        // some daemon logic
+        $context->stop('You can stop the worker and specify the reason.');
+    })
+    ->setTickInterval(2) // in seconds 
+    ->addWorkerStartedListener(static function (WorkerStarted $event): void {
+        // do something on start
+    })
+    ->addWorkerTickedListener(static function (WorkerTicked $context): void {
+        // do something on every tick
+        $context->stop('You can stop the worker and specify the reason.');
+    })
+    ->addWorkerStoppedListener(static function (WorkerStopped $context): void {
+        // do something after worker stopped
+    })
+    ->setEventDispatcher($symfonyEventDispatcher) // optionally set an event dispatcher service
+    ->setMemorySoftLimit(1024 * 1024) // when memory size hits this number of bytes, the worker will stop gracefully
+    ->setStopSignalChannel('mailer') // allows to stop the worker from another process, see below
+    ->build()
+;
 
-$worker = new Worker(
-    // an iterable of operations that should be executed on each tick
-    [
-        function (Context $context): void {
-            $mailer->sendPendingEmails();
-    
-            if (someStopCondition()) {
-                $context->stop();
-                $context->log(
-                    'Worker was stopped after tick {tick}.', 
-                    ['tick' => $context->tick],
-                    LogLevel::WARNING
-                );
-            }
-        },
-        new MemoryInterrupter(16 * 1024 * 1024), // 16mb memory limit
-        $stopSignaller->createInterrupter('mail_worker'),
-    ],
-    // a logger, defaults to NullLogger
-    $logger,
-    // sleep interval between the ticks in seconds, defaults to 1
-    5
-);
+$stopped = $worker->run();
+$stopped->tickedTimes;
+$stopped->stopReason;
 
-$worker->run(); // or simply $worker(), since worker is a callable object
-```
-
-```php
-// somewhere within deployment pipeline
-
-use HappyInc\Worker\StopSignaller;
-
-(new StopSignaller())->sendStopSignal('mail_worker');
+// send a stop signal to all workers, subscribed to the "mailer" channel
+(new FileStopSignaller())->sendStopSignal('mailer');
 ```

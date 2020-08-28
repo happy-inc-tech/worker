@@ -4,77 +4,69 @@ declare(strict_types=1);
 
 namespace HappyInc\Worker;
 
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * @psalm-type Operation = callable(WorkerTicked): void
+ */
 final class Worker
 {
     /**
-     * @psalm-var iterable<callable(Context): void>
+     * @psalm-var Operation
      */
-    private $operations;
+    private $operation;
 
     /**
-     * @var SigtermInterrupter
+     * @var EventDispatcherInterface
      */
-    private $sigtermInterrupter;
+    private $eventDispatcher;
 
     /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var int
+     * @psalm-var positive-int
      */
     private $sleepSeconds;
 
     /**
-     * @psalm-param iterable<callable(Context): void> $operations
+     * @psalm-param Operation $operation
+     * @psalm-param positive-int $sleepSeconds
      */
-    public function __construct(iterable $operations, ?LoggerInterface $logger = null, int $sleepSeconds = 1)
+    public function __construct(callable $operation, ?EventDispatcherInterface $eventDispatcher = null, int $sleepSeconds = 1)
     {
-        if ($sleepSeconds <= 0) {
-            throw new \InvalidArgumentException(sprintf('Parameter $sleepSeconds must be a positive integer, got %d.', $sleepSeconds));
-        }
-
-        $this->operations = $operations;
-        $this->sigtermInterrupter = new SigtermInterrupter();
-        $this->logger = $logger ?? new NullLogger();
+        $this->operation = $operation;
+        $this->eventDispatcher = $eventDispatcher ?? new NullEventDispatcher();
         $this->sleepSeconds = $sleepSeconds;
     }
 
-    public function __invoke(): void
+    public function run(): WorkerStopped
     {
-        $this->run();
-    }
+        $this->eventDispatcher->dispatch(new WorkerStarted());
 
-    public function run(): void
-    {
         $tick = 0;
 
         while (true) {
-            $context = new Context($tick, $this->logger);
+            $tickedEvent = new WorkerTicked($tick);
 
-            foreach ($this->operations() as $operation) {
-                $operation($context);
+            ($this->operation)($tickedEvent);
 
-                if ($context->stopped) {
-                    return;
-                }
+            if ($tickedEvent->stopped) {
+                break;
+            }
+
+            $this->eventDispatcher->dispatch($tickedEvent);
+
+            /** @psalm-suppress DocblockTypeContradiction */
+            if ($tickedEvent->stopped) {
+                break;
             }
 
             sleep($this->sleepSeconds);
             ++$tick;
         }
-    }
 
-    /**
-     * @psalm-return \Generator<callable(Context): void>
-     */
-    private function operations(): \Generator
-    {
-        yield from $this->operations;
-        yield $this->sigtermInterrupter;
+        /** @psalm-suppress ArgumentTypeCoercion */
+        $stoppedEvent = new WorkerStopped($tick + 1, $tickedEvent->stopReason ?? null);
+        $this->eventDispatcher->dispatch($stoppedEvent);
+
+        return $stoppedEvent;
     }
 }
