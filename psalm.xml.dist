@@ -24,12 +24,10 @@
         <DeprecatedMethod errorLevel="info"/>
         <DeprecatedProperty errorLevel="info"/>
         <DeprecatedTrait errorLevel="info"/>
-        <Trace errorLevel="info"/>
     </issueHandlers>
 
     <ignoreExceptions>
-        <class name="RuntimeException"/>
-        <class name="InvalidArgumentException"/>
-        <class name="Psr\Log\InvalidArgumentException"/>
+        <classAndDescendants name="RuntimeException"/>
+        <classAndDescendants name="InvalidArgumentException"/>
     </ignoreExceptions>
 </psalm>
