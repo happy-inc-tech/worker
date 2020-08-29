@@ -12,7 +12,7 @@ final class WorkerStopped
     /**
      * @psalm-var positive-int
      */
-    public $tickedTimes;
+    public $jobs;
 
     /**
      * @var string|null
@@ -20,11 +20,11 @@ final class WorkerStopped
     public $stopReason;
 
     /**
-     * @psalm-param positive-int $tickedTimes
+     * @psalm-param positive-int $jobs
      */
-    public function __construct(int $tickedTimes, ?string $stopReason)
+    public function __construct(int $jobs, ?string $stopReason)
     {
-        $this->tickedTimes = $tickedTimes;
+        $this->jobs = $jobs;
         $this->stopReason = $stopReason;
     }
 }

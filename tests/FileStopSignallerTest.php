@@ -18,7 +18,7 @@ final class FileStopSignallerTest extends TestCase
     {
         $channel = 'channel';
         $signaller = new FileStopSignaller();
-        $event = new WorkerTicked(0);
+        $event = new WorkerDoneJob(0);
         $interrupter = $signaller->createListener($channel);
 
         $interrupter($event);
@@ -31,7 +31,7 @@ final class FileStopSignallerTest extends TestCase
         $channel = 'channel';
         $signaller = new FileStopSignaller();
         $signaller->sendStopSignal($channel);
-        $event = new WorkerTicked(0);
+        $event = new WorkerDoneJob(0);
         $interrupter = $signaller->createListener($channel);
 
         $interrupter($event);
@@ -43,7 +43,7 @@ final class FileStopSignallerTest extends TestCase
     {
         $channel = 'channel';
         $signaller = new FileStopSignaller();
-        $event = new WorkerTicked(0);
+        $event = new WorkerDoneJob(0);
         $interrupter = $signaller->createListener($channel);
 
         $signaller->sendStopSignal($channel);

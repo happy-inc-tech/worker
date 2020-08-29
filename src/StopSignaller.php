@@ -9,7 +9,7 @@ interface StopSignaller
     public function sendStopSignal(string $channel): void;
 
     /**
-     * @psalm-return callable(WorkerTicked): void
+     * @psalm-return callable(WorkerDoneJob): void
      */
     public function createListener(string $channel): callable;
 }

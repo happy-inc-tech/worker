@@ -46,7 +46,7 @@ final class FileStopSignaller implements StopSignaller
         $file = $this->channelFile($channel);
         $initialValue = @file_get_contents($file, false, null, 0, self::MAX_LENGTH);
 
-        return static function (WorkerTicked $event) use ($channel, $file, $initialValue): void {
+        return static function (WorkerDoneJob $event) use ($channel, $file, $initialValue): void {
             if ($initialValue === @file_get_contents($file, false, null, 0, self::MAX_LENGTH)) {
                 return;
             }

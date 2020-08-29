@@ -46,7 +46,7 @@ final class StopOnMemorySoftLimitExceeded
         $this->logLevel = $logLevel;
     }
 
-    public function __invoke(WorkerTicked $event): void
+    public function __invoke(WorkerDoneJob $event): void
     {
         $allocatedMemory = ($this->memoryGetUsage)();
 

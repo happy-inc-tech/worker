@@ -6,13 +6,13 @@ namespace HappyInc\Worker;
 
 use Psr\EventDispatcher\StoppableEventInterface;
 
-final class WorkerTicked implements StoppableEventInterface
+final class WorkerDoneJob implements StoppableEventInterface
 {
     /**
      * @var int
      * @psalm-readonly
      */
-    public $tick;
+    public $jobIndex;
 
     /**
      * @var bool
@@ -26,9 +26,9 @@ final class WorkerTicked implements StoppableEventInterface
      */
     public $stopReason;
 
-    public function __construct(int $tick)
+    public function __construct(int $jobIndex)
     {
-        $this->tick = $tick;
+        $this->jobIndex = $jobIndex;
     }
 
     public function stop(?string $reason = null): void

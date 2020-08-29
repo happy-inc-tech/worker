@@ -8,20 +8,12 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-/**
- * @psalm-import-type Operation from Worker
- */
 final class WorkerBuilder
 {
     /**
-     * @psalm-var Operation
-     */
-    private $operation;
-
-    /**
      * @psalm-var array{
      *     'HappyInc\Worker\WorkerStarted'?: list<callable(WorkerStarted): void>,
-     *     'HappyInc\Worker\WorkerTicked'?: list<callable(WorkerTicked): void>,
+     *     'HappyInc\Worker\WorkerDoneJob'?: list<callable(WorkerDoneJob): void>,
      *     'HappyInc\Worker\WorkerStopped'?: list<callable(WorkerStopped): void>,
      * }
      */
@@ -35,7 +27,7 @@ final class WorkerBuilder
     /**
      * @psalm-var positive-int
      */
-    private $tickIntervalSeconds = 1;
+    private $restIntervalSeconds = 1;
 
     /**
      * @var int|null
@@ -67,20 +59,13 @@ final class WorkerBuilder
      */
     private $stopSignalChannel;
 
-    /**
-     * @psalm-param Operation $operation
-     */
-    private function __construct(callable $operation)
+    private function __construct()
     {
-        $this->operation = $operation;
     }
 
-    /**
-     * @psalm-param Operation $operation
-     */
-    public static function create(callable $operation): self
+    public static function create(): self
     {
-        return new self($operation);
+        return new self();
     }
 
     /**
@@ -94,11 +79,11 @@ final class WorkerBuilder
     }
 
     /**
-     * @psalm-param callable(WorkerTicked): void $listener
+     * @psalm-param callable(WorkerDoneJob): void $listener
      */
-    public function addWorkerTickedListener(callable $listener): self
+    public function addWorkerDoneJobListener(callable $listener): self
     {
-        $this->listeners[WorkerTicked::class][] = $listener;
+        $this->listeners[WorkerDoneJob::class][] = $listener;
 
         return $this;
     }
@@ -121,16 +106,16 @@ final class WorkerBuilder
     }
 
     /**
-     * @psalm-param positive-int $tickIntervalSeconds
+     * @psalm-param positive-int $restIntervalSeconds
      */
-    public function setTickInterval(int $tickIntervalSeconds): self
+    public function setRestIntervalSeconds(int $restIntervalSeconds): self
     {
-        $this->tickIntervalSeconds = $tickIntervalSeconds;
+        $this->restIntervalSeconds = $restIntervalSeconds;
 
         return $this;
     }
 
-    public function setMemorySoftLimit(?int $memorySoftLimitBytes): self
+    public function setMemorySoftLimitBytes(?int $memorySoftLimitBytes): self
     {
         $this->memorySoftLimitBytes = $memorySoftLimitBytes;
 
@@ -173,7 +158,7 @@ final class WorkerBuilder
         $listeners = $this->listeners;
 
         if (null !== $this->memorySoftLimitBytes) {
-            $listeners[WorkerTicked::class][] = new StopOnMemorySoftLimitExceeded(
+            $listeners[WorkerDoneJob::class][] = new StopOnMemorySoftLimitExceeded(
                 $this->memorySoftLimitBytes,
                 $this->memorySoftLimitLogger,
                 $this->memorySoftLimitLogLevel
@@ -181,7 +166,7 @@ final class WorkerBuilder
         }
 
         if ($this->stopOnSigterm) {
-            $listeners[WorkerTicked::class][] = new StopOnSigterm();
+            $listeners[WorkerDoneJob::class][] = new StopOnSigterm();
         }
 
         if (null !== $this->stopSignalChannel) {
@@ -189,10 +174,10 @@ final class WorkerBuilder
                 $this->stopSignaller = new FileStopSignaller();
             }
 
-            $listeners[WorkerTicked::class][] = $this->stopSignaller->createListener($this->stopSignalChannel);
+            $listeners[WorkerDoneJob::class][] = $this->stopSignaller->createListener($this->stopSignalChannel);
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */
-        return new Worker($this->operation, new EventDispatcher($listeners, $this->eventDispatcher), $this->tickIntervalSeconds);
+        return new Worker(new EventDispatcher($listeners, $this->eventDispatcher), $this->restIntervalSeconds);
     }
 }

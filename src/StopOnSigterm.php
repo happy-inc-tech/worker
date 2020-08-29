@@ -21,7 +21,7 @@ final class StopOnSigterm
         });
     }
 
-    public function __invoke(WorkerTicked $event): void
+    public function __invoke(WorkerDoneJob $event): void
     {
         pcntl_signal_dispatch();
 

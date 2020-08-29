@@ -6,16 +6,8 @@ namespace HappyInc\Worker;
 
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-/**
- * @psalm-type Operation = callable(WorkerTicked): void
- */
 final class Worker
 {
-    /**
-     * @psalm-var Operation
-     */
-    private $operation;
-
     /**
      * @var EventDispatcherInterface
      */
@@ -24,49 +16,54 @@ final class Worker
     /**
      * @psalm-var positive-int
      */
-    private $sleepSeconds;
+    private $restIntervalSeconds;
 
     /**
-     * @psalm-param Operation $operation
-     * @psalm-param positive-int $sleepSeconds
+     * @psalm-param positive-int $restIntervalSeconds
      */
-    public function __construct(callable $operation, ?EventDispatcherInterface $eventDispatcher = null, int $sleepSeconds = 1)
+    public function __construct(?EventDispatcherInterface $eventDispatcher = null, int $restIntervalSeconds = 1)
     {
-        $this->operation = $operation;
         $this->eventDispatcher = $eventDispatcher ?? new NullEventDispatcher();
-        $this->sleepSeconds = $sleepSeconds;
+        $this->restIntervalSeconds = $restIntervalSeconds;
     }
 
-    public function run(): WorkerStopped
+    /**
+     * @psalm-param callable(WorkerJobContext): void $job
+     */
+    public function do(callable $job): WorkerStopped
     {
         $this->eventDispatcher->dispatch(new WorkerStarted());
 
-        $tick = 0;
+        $jobIndex = 0;
+        $stopReason = null;
 
         while (true) {
-            $tickedEvent = new WorkerTicked($tick);
+            $jobContext = new WorkerJobContext($jobIndex);
+            $job($jobContext);
 
-            ($this->operation)($tickedEvent);
+            if ($jobContext->stopped) {
+                $stopReason = $jobContext->stopReason;
 
-            if ($tickedEvent->stopped) {
                 break;
             }
 
-            $this->eventDispatcher->dispatch($tickedEvent);
+            $doneJob = new WorkerDoneJob($jobIndex);
+            $this->eventDispatcher->dispatch($doneJob);
 
-            /** @psalm-suppress DocblockTypeContradiction */
-            if ($tickedEvent->stopped) {
+            if ($doneJob->stopped) {
+                $stopReason = $doneJob->stopReason;
+
                 break;
             }
 
-            sleep($this->sleepSeconds);
-            ++$tick;
+            sleep($this->restIntervalSeconds);
+            ++$jobIndex;
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */
-        $stoppedEvent = new WorkerStopped($tick + 1, $tickedEvent->stopReason ?? null);
-        $this->eventDispatcher->dispatch($stoppedEvent);
+        $stopped = new WorkerStopped($jobIndex + 1, $stopReason);
+        $this->eventDispatcher->dispatch($stopped);
 
-        return $stoppedEvent;
+        return $stopped;
     }
 }
