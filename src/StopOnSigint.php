@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace HappyInc\Worker;
 
-final class StopOnSigterm
+final class StopOnSigint
 {
     /**
      * @var bool
@@ -13,7 +13,7 @@ final class StopOnSigterm
 
     public function __construct()
     {
-        pcntl_signal(SIGTERM, function (): void {
+        pcntl_signal(SIGINT, function (): void {
             $this->stop = true;
         });
     }
@@ -23,7 +23,7 @@ final class StopOnSigterm
         pcntl_signal_dispatch();
 
         if ($this->stop) {
-            $event->stop('Process received a SIGTERM signal.');
+            $event->stop('Process received a SIGINT signal.');
         }
     }
 }

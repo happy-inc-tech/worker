@@ -47,6 +47,11 @@ final class WorkerBuilder
     /**
      * @var bool
      */
+    private $stopOnSigint = true;
+
+    /**
+     * @var bool
+     */
     private $stopOnSigterm = true;
 
     /**
@@ -139,6 +144,20 @@ final class WorkerBuilder
         return $this;
     }
 
+    public function setStopOnSigint(bool $stopOnSigint): self
+    {
+        $this->stopOnSigint = $stopOnSigint;
+
+        return $this;
+    }
+
+    public function setStopOnSigterm(bool $stopOnSigterm): self
+    {
+        $this->stopOnSigterm = $stopOnSigterm;
+
+        return $this;
+    }
+
     public function setStopSignaller(?StopSignaller $stopSignaller): self
     {
         $this->stopSignaller = $stopSignaller;
@@ -163,6 +182,10 @@ final class WorkerBuilder
                 $this->memorySoftLimitLogger,
                 $this->memorySoftLimitLogLevel
             );
+        }
+
+        if ($this->stopOnSigint) {
+            $listeners[WorkerDoneJob::class][] = new StopOnSigint();
         }
 
         if ($this->stopOnSigterm) {
