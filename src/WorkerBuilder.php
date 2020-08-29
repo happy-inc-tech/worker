@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace HappyInc\Worker;
 
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 /**
  * @psalm-import-type Operation from Worker
@@ -39,6 +41,16 @@ final class WorkerBuilder
      * @var int|null
      */
     private $memorySoftLimitBytes;
+
+    /**
+     * @var LoggerInterface|null
+     */
+    private $memorySoftLimitLogger;
+
+    /**
+     * @psalm-var LogLevel::*
+     */
+    private $memorySoftLimitLogLevel = LogLevel::WARNING;
 
     /**
      * @var bool
@@ -125,6 +137,23 @@ final class WorkerBuilder
         return $this;
     }
 
+    public function setMemorySoftLimitLogger(?LoggerInterface $memorySoftLimitLogger): self
+    {
+        $this->memorySoftLimitLogger = $memorySoftLimitLogger;
+
+        return $this;
+    }
+
+    /**
+     * @psalm-param LogLevel::* $memorySoftLimitLogLevel
+     */
+    public function setMemorySoftLimitLogLevel(string $memorySoftLimitLogLevel): self
+    {
+        $this->memorySoftLimitLogLevel = $memorySoftLimitLogLevel;
+
+        return $this;
+    }
+
     public function setStopSignaller(?StopSignaller $stopSignaller): self
     {
         $this->stopSignaller = $stopSignaller;
@@ -144,7 +173,11 @@ final class WorkerBuilder
         $listeners = $this->listeners;
 
         if (null !== $this->memorySoftLimitBytes) {
-            $listeners[WorkerTicked::class][] = new StopOnMemorySoftLimitExceeded($this->memorySoftLimitBytes);
+            $listeners[WorkerTicked::class][] = new StopOnMemorySoftLimitExceeded(
+                $this->memorySoftLimitBytes,
+                $this->memorySoftLimitLogger,
+                $this->memorySoftLimitLogLevel
+            );
         }
 
         if ($this->stopOnSigterm) {
