@@ -13,24 +13,15 @@ final class Worker
      */
     private $eventDispatcher;
 
-    /**
-     * @psalm-var positive-int
-     */
-    private $restIntervalSeconds;
-
-    /**
-     * @psalm-param positive-int $restIntervalSeconds
-     */
-    public function __construct(?EventDispatcherInterface $eventDispatcher = null, int $restIntervalSeconds = 1)
+    public function __construct(?EventDispatcherInterface $eventDispatcher = null)
     {
         $this->eventDispatcher = $eventDispatcher ?? new NullEventDispatcher();
-        $this->restIntervalSeconds = $restIntervalSeconds;
     }
 
     /**
      * @psalm-param callable(WorkerJobContext): void $job
      */
-    public function do(callable $job): WorkerStopped
+    public function do(callable $job, RestInterval $restInterval): WorkerStopped
     {
         $this->eventDispatcher->dispatch(new WorkerStarted());
 
@@ -56,7 +47,7 @@ final class Worker
                 break;
             }
 
-            sleep($this->restIntervalSeconds);
+            usleep($restInterval->microseconds);
             ++$jobIndex;
         }
 

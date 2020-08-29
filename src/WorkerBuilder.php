@@ -25,11 +25,6 @@ final class WorkerBuilder
     private $eventDispatcher;
 
     /**
-     * @psalm-var positive-int
-     */
-    private $restIntervalSeconds = 1;
-
-    /**
      * @var int|null
      */
     private $memorySoftLimitBytes;
@@ -106,16 +101,6 @@ final class WorkerBuilder
     public function setEventDispatcher(?EventDispatcherInterface $eventDispatcher): self
     {
         $this->eventDispatcher = $eventDispatcher;
-
-        return $this;
-    }
-
-    /**
-     * @psalm-param positive-int $restIntervalSeconds
-     */
-    public function setRestIntervalSeconds(int $restIntervalSeconds): self
-    {
-        $this->restIntervalSeconds = $restIntervalSeconds;
 
         return $this;
     }
@@ -201,6 +186,6 @@ final class WorkerBuilder
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */
-        return new Worker(new EventDispatcher($listeners, $this->eventDispatcher), $this->restIntervalSeconds);
+        return new Worker(new EventDispatcher($listeners, $this->eventDispatcher));
     }
 }
