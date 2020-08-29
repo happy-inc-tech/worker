@@ -8,8 +8,21 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
+/**
+ * @psalm-import-type Job from Worker
+ */
 final class WorkerBuilder
 {
+    /**
+     * @psalm-var ?Job
+     */
+    private $job;
+
+    /**
+     * @var RestInterval|null
+     */
+    private $restInterval;
+
     /**
      * @psalm-var array{
      *     'HappyInc\Worker\WorkerStarted'?: list<callable(WorkerStarted): void>,
@@ -35,6 +48,7 @@ final class WorkerBuilder
     private $memorySoftLimitLogger;
 
     /**
+     * @var string
      * @psalm-var LogLevel::*
      */
     private $memorySoftLimitLogLevel = LogLevel::WARNING;
@@ -66,6 +80,23 @@ final class WorkerBuilder
     public static function create(): self
     {
         return new self();
+    }
+
+    /**
+     * @psalm-param Job $job
+     */
+    public function setJob(callable $job): self
+    {
+        $this->job = $job;
+
+        return $this;
+    }
+
+    public function setRestInterval(?RestInterval $restInterval): self
+    {
+        $this->restInterval = $restInterval;
+
+        return $this;
     }
 
     /**
@@ -159,6 +190,10 @@ final class WorkerBuilder
 
     public function build(): Worker
     {
+        if (null === $this->job) {
+            throw new \LogicException('Job is required to build a worker.');
+        }
+
         $listeners = $this->listeners;
 
         if (null !== $this->memorySoftLimitBytes) {
@@ -178,14 +213,10 @@ final class WorkerBuilder
         }
 
         if (null !== $this->stopSignalChannel) {
-            if (null === $this->stopSignaller) {
-                $this->stopSignaller = new FileStopSignaller();
-            }
-
-            $listeners[WorkerDoneJob::class][] = $this->stopSignaller->createListener($this->stopSignalChannel);
+            $listeners[WorkerDoneJob::class][] = ($this->stopSignaller ?? new FileStopSignaller())->createListener($this->stopSignalChannel);
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */
-        return new Worker(new EventDispatcher($listeners, $this->eventDispatcher));
+        return new Worker($this->job, $this->restInterval, new EventDispatcher($listeners, $this->eventDispatcher));
     }
 }

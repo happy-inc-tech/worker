@@ -6,22 +6,37 @@ namespace HappyInc\Worker;
 
 use Psr\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * @psalm-type Job = callable(WorkerJobContext): void
+ */
 final class Worker
 {
+    /**
+     * @psalm-var Job
+     */
+    private $job;
+
+    /**
+     * @var RestInterval
+     */
+    private $restInterval;
+
     /**
      * @var EventDispatcherInterface
      */
     private $eventDispatcher;
 
-    public function __construct(?EventDispatcherInterface $eventDispatcher = null)
+    /**
+     * @psalm-param Job $job
+     */
+    public function __construct(callable $job, ?RestInterval $restInterval = null, ?EventDispatcherInterface $eventDispatcher = null)
     {
+        $this->job = $job;
+        $this->restInterval = $restInterval ?? RestInterval::fromSeconds(1);
         $this->eventDispatcher = $eventDispatcher ?? new NullEventDispatcher();
     }
 
-    /**
-     * @psalm-param callable(WorkerJobContext): void $job
-     */
-    public function do(callable $job, RestInterval $restInterval): WorkerStopped
+    public function do(): WorkerStopped
     {
         $this->eventDispatcher->dispatch(new WorkerStarted());
 
@@ -30,7 +45,7 @@ final class Worker
 
         while (true) {
             $jobContext = new WorkerJobContext($jobIndex);
-            $job($jobContext);
+            ($this->job)($jobContext);
 
             if ($jobContext->stopped) {
                 $stopReason = $jobContext->stopReason;
@@ -47,7 +62,7 @@ final class Worker
                 break;
             }
 
-            usleep($restInterval->microseconds);
+            usleep($this->restInterval->microseconds);
             ++$jobIndex;
         }
 

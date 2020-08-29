@@ -32,7 +32,8 @@
     </issueHandlers>
 
     <ignoreExceptions>
-        <classAndDescendants name="RuntimeException"/>
         <classAndDescendants name="InvalidArgumentException"/>
+        <classAndDescendants name="LogicException"/>
+        <classAndDescendants name="RuntimeException"/>
     </ignoreExceptions>
 </psalm>
