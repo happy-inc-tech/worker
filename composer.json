@@ -20,6 +20,7 @@
         "icanhazstring/composer-unused": "^0.7",
         "maglnet/composer-require-checker": "^2.1",
         "phpunit/phpunit": "^9.0",
+        "psalm/plugin-phpunit": "^0.11.0",
         "vimeo/psalm": "^3.11"
     },
     "config": {
