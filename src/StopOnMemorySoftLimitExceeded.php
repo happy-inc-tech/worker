@@ -16,11 +16,6 @@ final class StopOnMemorySoftLimitExceeded
     private $limitBytes;
 
     /**
-     * @psalm-var callable(): int
-     */
-    private $memoryGetUsage;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -34,21 +29,20 @@ final class StopOnMemorySoftLimitExceeded
      * @psalm-param ?callable(): int $memoryGetUsage
      * @psalm-param LogLevel::* $logLevel
      */
-    public function __construct(int $limitBytes, ?LoggerInterface $logger = null, string $logLevel = LogLevel::WARNING, ?callable $memoryGetUsage = null)
+    public function __construct(int $limitBytes, ?LoggerInterface $logger = null, string $logLevel = LogLevel::WARNING)
     {
         if ($limitBytes <= 0) {
             throw new \InvalidArgumentException(sprintf('Parameter $maxBytes must be a positive integer, got %d.', $limitBytes));
         }
 
         $this->limitBytes = $limitBytes;
-        $this->memoryGetUsage = $memoryGetUsage ?? static function (): int { return memory_get_usage(true); };
         $this->logger = $logger ?? new NullLogger();
         $this->logLevel = $logLevel;
     }
 
     public function __invoke(WorkerDoneJob $event): void
     {
-        $allocatedMemory = ($this->memoryGetUsage)();
+        $allocatedMemory = memory_get_usage(true);
 
         if ($allocatedMemory <= $this->limitBytes) {
             return;

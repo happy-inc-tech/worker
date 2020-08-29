@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace HappyInc\Worker;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LogLevel;
-use Psr\Log\NullLogger;
 
 /**
  * @internal
@@ -18,7 +16,8 @@ final class StopOnMemorySoftLimitExceededTest extends TestCase
 {
     public function testDoesNotStopWhenMemoryLimitIsNotReached(): void
     {
-        $interrupter = new StopOnMemorySoftLimitExceeded(100, new NullLogger(), LogLevel::WARNING, static function (): int { return 50; });
+        $limit = memory_get_usage(true) + 1024;
+        $interrupter = new StopOnMemorySoftLimitExceeded($limit);
         $event = new WorkerDoneJob(0);
 
         $interrupter($event);
@@ -28,7 +27,8 @@ final class StopOnMemorySoftLimitExceededTest extends TestCase
 
     public function testStopsWhenMemoryLimitReached(): void
     {
-        $interrupter = new StopOnMemorySoftLimitExceeded(100, new NullLogger(), LogLevel::WARNING, static function (): int { return 200; });
+        $limit = memory_get_usage() - 1024;
+        $interrupter = new StopOnMemorySoftLimitExceeded($limit);
         $event = new WorkerDoneJob(0);
 
         $interrupter($event);
