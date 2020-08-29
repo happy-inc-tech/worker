@@ -23,7 +23,7 @@ fixcs: vendor
 	$(EXEC_PHP) vendor/bin/php-cs-fixer fix --allow-risky=yes $(VERBOSITY)
 
 psalm: vendor
-	$(EXEC_PHP) vendor/bin/psalm --find-unused-psalm-suppress $(file)
+	$(EXEC_PHP) vendor/bin/psalm $(file)
 
 composer-check-require: vendor
 	$(EXEC_PHP) vendor/bin/composer-require-checker check $(VERBOSITY)
