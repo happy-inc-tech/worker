@@ -2,23 +2,20 @@
 
 declare(strict_types=1);
 
-namespace HappyInc\Worker;
+namespace HappyInc\Worker\Signaller;
 
-final class FileStopSignaller implements StopSignaller
+final class FileSignaller implements Signaller
 {
     private const MAX_LENGTH = 26;
 
-    /**
-     * @var string
-     */
-    private $dir;
+    private string $dir;
 
     public function __construct(?string $dir = null)
     {
         $this->dir = rtrim($dir ?? sys_get_temp_dir(), \DIRECTORY_SEPARATOR);
     }
 
-    public function sendStopSignal(string $channel): void
+    public function sendSignal(string $channel): void
     {
         if (!is_dir($this->dir) && !@mkdir($this->dir, 0777, true)) {
             throw new \RuntimeException(sprintf('Failed to create directory "%s".', $this->dir));
@@ -46,13 +43,7 @@ final class FileStopSignaller implements StopSignaller
         $file = $this->channelFile($channel);
         $initialValue = @file_get_contents($file, false, null, 0, self::MAX_LENGTH);
 
-        return static function (WorkerDoneJob $event) use ($channel, $file, $initialValue): void {
-            if ($initialValue === @file_get_contents($file, false, null, 0, self::MAX_LENGTH)) {
-                return;
-            }
-
-            $event->stop(sprintf('A stop signal was received from channel "%s".', $channel));
-        };
+        return static fn (): bool => $initialValue !== @file_get_contents($file, false, null, 0, self::MAX_LENGTH);
     }
 
     private function channelFile(string $channel): string

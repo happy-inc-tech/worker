@@ -10,12 +10,12 @@
         }
     ],
     "require": {
-        "php": "^7.2",
+        "php": "^7.4",
         "ext-pcntl": "*",
-        "psr/event-dispatcher": "^1.0",
-        "psr/log": "^1.1"
+        "psr/log": "^1.0"
     },
     "require-dev": {
+        "ext-posix": "*",
         "friendsofphp/php-cs-fixer": "^2.16",
         "icanhazstring/composer-unused": "^0.7",
         "maglnet/composer-require-checker": "^2.1",

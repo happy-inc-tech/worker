@@ -4,72 +4,74 @@ declare(strict_types=1);
 
 namespace HappyInc\Worker;
 
-use Psr\EventDispatcher\EventDispatcherInterface;
-
-/**
- * @psalm-type Job = callable(WorkerJobContext): void
- */
 final class Worker
 {
     /**
-     * @psalm-var Job
+     * @var WorkerStartedExtension[]
      */
-    private $job;
+    private array $startedExtensions = [];
 
     /**
-     * @var RestInterval
+     * @var WorkerJobDoneExtension[]
      */
-    private $restInterval;
+    private array $jobDoneExtensions = [];
 
     /**
-     * @var EventDispatcherInterface
+     * @var WorkerStoppedExtension[]
      */
-    private $eventDispatcher;
+    private array $stoppedExtensions = [];
 
     /**
-     * @psalm-param Job $job
+     * @psalm-param iterable<WorkerStartedExtension|WorkerJobDoneExtension|WorkerStoppedExtension> $extensions
      */
-    public function __construct(callable $job, ?RestInterval $restInterval = null, ?EventDispatcherInterface $eventDispatcher = null)
+    public function __construct(iterable $extensions = [])
     {
-        $this->job = $job;
-        $this->restInterval = $restInterval ?? RestInterval::fromSeconds(1);
-        $this->eventDispatcher = $eventDispatcher ?? new NullEventDispatcher();
+        foreach ($extensions as $extension) {
+            if ($extension instanceof WorkerStartedExtension) {
+                $this->startedExtensions[] = $extension;
+            }
+
+            if ($extension instanceof WorkerJobDoneExtension) {
+                $this->jobDoneExtensions[] = $extension;
+            }
+
+            if ($extension instanceof WorkerStoppedExtension) {
+                $this->stoppedExtensions[] = $extension;
+            }
+        }
     }
 
-    public function do(): WorkerStopped
+    /**
+     * @psalm-param callable(Context, int): void $job
+     */
+    public function workOn(callable $job): Result
     {
-        $this->eventDispatcher->dispatch(new WorkerStarted());
+        $context = new Context();
 
-        $jobIndex = 0;
-        $stopReason = null;
-
-        while (true) {
-            $jobContext = new WorkerJobContext($jobIndex);
-            ($this->job)($jobContext);
-
-            if ($jobContext->stopped) {
-                $stopReason = $jobContext->stopReason;
-
-                break;
-            }
-
-            $doneJob = new WorkerDoneJob($jobIndex);
-            $this->eventDispatcher->dispatch($doneJob);
-
-            if ($doneJob->stopped) {
-                $stopReason = $doneJob->stopReason;
-
-                break;
-            }
-
-            usleep($this->restInterval->microseconds);
-            ++$jobIndex;
+        foreach ($this->startedExtensions as $extension) {
+            $extension->started($context);
         }
 
-        /** @psalm-suppress ArgumentTypeCoercion */
-        $stopped = new WorkerStopped($jobIndex + 1, $stopReason);
-        $this->eventDispatcher->dispatch($stopped);
+        $stop = null;
 
-        return $stopped;
+        for ($jobIndex = 0;; ++$jobIndex) {
+            $job($context, $jobIndex);
+
+            foreach ($this->jobDoneExtensions as $extension) {
+                $stop = $extension->jobDone($context, $jobIndex);
+
+                if (null !== $stop) {
+                    break 2;
+                }
+            }
+        }
+
+        $result = new Result(++$jobIndex, $stop->reason ?? null);
+
+        foreach ($this->stoppedExtensions as $extension) {
+            $extension->stopped($context, $result);
+        }
+
+        return $result;
     }
 }

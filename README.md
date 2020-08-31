@@ -1,34 +1,32 @@
 # Happy Inc Worker
 
 ```php
-namespace HappyInc\Worker;
+use HappyInc\Worker\MemoryLimit\MemoryLimit;
+use HappyInc\Worker\MemoryLimit\MemoryLimitExtension;
+use HappyInc\Worker\ProcessSignal\ProcessSignalExtension;
+use HappyInc\Worker\Signaller\FileSignaller;
+use HappyInc\Worker\Signaller\SignallerExtension;
+use HappyInc\Worker\Sleep\SleepExtension;
+use HappyInc\Worker\Sleep\SleepInterval;
+use HappyInc\Worker\Worker;
+use Psr\Log\LogLevel;
 
-$worker = WorkerBuilder
-    ::create()
-    ->setRestIntervalSeconds(2) 
-    ->addWorkerStartedListener(static function (WorkerStarted $event): void {
-        // do something on start
-    })
-    ->addWorkerDoneJobListener(static function (WorkerDoneJob $event): void {
-        // do something every iteration
-        $event->stop('You can stop the worker and specify the reason.');
-    })
-    ->addWorkerStoppedListener(static function (WorkerStopped $event): void {
-        // do something after worker stopped
-    })
-    ->setEventDispatcher($symfonyEventDispatcher) // optionally set an event dispatcher service
-    ->setMemorySoftLimitBytes(1024 * 1024) // when allocated memory size hits this number of bytes, the worker will stop gracefully
-    ->setStopSignalChannel('mailer') // stop the worker with a signal from another process, see below
-    ->build()
-;
+$signaller = new FileSignaller('/some/dir');
 
-$stopped = $worker->do(static function (WorkerDoneJob $event): void {
-    // some job logic
-    $event->stop('You can stop the worker and specify the reason.');
+$worker = new Worker([
+    new MemoryLimitExtension(
+        MemoryLimit::fromIniMemoryLimit(0.7), // stop when allocated memory reaches 70% of php.ini memory_limit
+        $systemLogger,
+        LogLevel::CRITICAL, // optionally log when memory limit is reached with the specified level
+    ),
+    new ProcessSignalExtension([SIGINT]), // gracefully stop the worker when Ctrl+C is pressed in the terminal
+    new SignallerExtension('mailing_worker', $signaller), // allows to send a stop signal from a different process
+    new SleepExtension(SleepInterval::fromSeconds(1)), // sleep 1 second after each job
+]);
+
+$worker->workOn(function (): void {
+    // some job
 });
-$stopped->jobs;
-$stopped->stopReason;
 
-// send a stop signal to all workers, subscribed to the "mailer" channel
-(new FileStopSignaller())->sendStopSignal('mailer');
+$signaller->sendSignal('mailing_worker'); // stop all workers, listening to the "mailing_worker" channel via the SignallerExtension
 ```
