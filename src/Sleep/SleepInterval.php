@@ -22,7 +22,7 @@ final class SleepInterval
     public static function fromMicroseconds(int $microseconds): self
     {
         if ($microseconds < 0) {
-            throw new \InvalidArgumentException(sprintf('Sleep interval must be zero or positive.'));
+            throw new \InvalidArgumentException('Sleep interval must be zero or positive.');
         }
 
         return new self($microseconds);
@@ -34,7 +34,7 @@ final class SleepInterval
     public static function fromMilliseconds(int $milliseconds): self
     {
         if ($milliseconds < 0) {
-            throw new \InvalidArgumentException(sprintf('Sleep interval must be zero or positive.'));
+            throw new \InvalidArgumentException('Sleep interval must be zero or positive.');
         }
 
         return new self($milliseconds * 1000);
@@ -46,7 +46,7 @@ final class SleepInterval
     public static function fromSeconds(int $seconds): self
     {
         if ($seconds < 0) {
-            throw new \InvalidArgumentException(sprintf('Sleep interval must be zero or positive.'));
+            throw new \InvalidArgumentException('Sleep interval must be zero or positive.');
         }
 
         return new self($seconds * 1_000_000);
