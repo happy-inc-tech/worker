@@ -16,11 +16,11 @@
     },
     "require-dev": {
         "ext-posix": "*",
-        "friendsofphp/php-cs-fixer": "^2.16",
+        "friendsofphp/php-cs-fixer": "^2.17",
         "icanhazstring/composer-unused": "^0.7",
         "maglnet/composer-require-checker": "^2.1",
         "phpunit/phpunit": "^9.0",
-        "psalm/plugin-phpunit": "^0.15.0",
+        "psalm/plugin-phpunit": "^0",
         "vimeo/psalm": "^4.2.1"
     },
     "config": {
