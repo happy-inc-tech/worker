@@ -23,14 +23,12 @@ final class SignallerExtension implements WorkerStartedExtension, WorkerJobDoneE
 
     public function started(Context $context): void
     {
-        /** @var SignallerContextData $data */
         $data = $context->dataOf(SignallerContextData::class);
         $data->listener = $this->signaller->createListener($this->channel);
     }
 
     public function jobDone(Context $context, int $jobIndex): ?Stop
     {
-        /** @var SignallerContextData $data */
         $data = $context->dataOf(SignallerContextData::class);
 
         if (($data->listener)()) {

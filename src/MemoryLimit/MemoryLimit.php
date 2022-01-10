@@ -9,11 +9,8 @@ namespace HappyInc\Worker\MemoryLimit;
  */
 final class MemoryLimit
 {
-    public int $bytes;
-
-    private function __construct(int $bytes)
+    private function __construct(public int $bytes)
     {
-        $this->bytes = $bytes;
     }
 
     /**

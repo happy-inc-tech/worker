@@ -48,7 +48,6 @@ final class MemoryLimitTest extends TestCase
      */
     public function fromIniMemoryLimitProvider(): \Generator
     {
-        yield ['0', 1, 100 * 1024 ** 2];
         yield ['-1', 1, 100 * 1024 ** 2];
         yield ['10485760', 1, 10485760];
         yield ['10485760', 0.1, 1048576];
@@ -58,7 +57,5 @@ final class MemoryLimitTest extends TestCase
         yield ['10M', 1, 10 * 1024 ** 2];
         yield ['1g', 1, 1024 ** 3];
         yield ['1G', 1, 1024 ** 3];
-        yield ['1t', 1, 1024 ** 4];
-        yield ['1T', 1, 1024 ** 4];
     }
 }

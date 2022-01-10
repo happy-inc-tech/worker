@@ -66,7 +66,7 @@ final class Worker
             }
         }
 
-        $result = new Result(++$jobIndex, $stop->reason ?? null);
+        $result = new Result($jobIndex + 1, $stop->reason ?? null);
 
         foreach ($this->stoppedExtensions as $extension) {
             $extension->stopped($context, $result);

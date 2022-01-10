@@ -26,7 +26,6 @@ final class ProcessSignalExtension implements WorkerStartedExtension, WorkerJobD
 
     public function started(Context $context): void
     {
-        /** @var ProcessSignalContextData $data */
         $data = $context->dataOf(ProcessSignalContextData::class);
 
         $handler = static function (int $signal) use ($data): void {
@@ -42,7 +41,6 @@ final class ProcessSignalExtension implements WorkerStartedExtension, WorkerJobD
     {
         pcntl_signal_dispatch();
 
-        /** @var ProcessSignalContextData $data */
         $data = $context->dataOf(ProcessSignalContextData::class);
 
         if (null === $data->receivedSignal) {

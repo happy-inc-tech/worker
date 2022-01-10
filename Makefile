@@ -17,7 +17,7 @@ test: vendor
 	$(EXEC_PHP) vendor/bin/phpunit $(VERBOSITY)
 
 cs: vendor
-	$(EXEC_PHP) vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run --diff --diff-format=udiff $(VERBOSITY)
+	$(EXEC_PHP) vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run --diff $(VERBOSITY)
 
 fixcs: vendor
 	$(EXEC_PHP) vendor/bin/php-cs-fixer fix --allow-risky=yes $(VERBOSITY)

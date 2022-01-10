@@ -9,11 +9,11 @@ namespace HappyInc\Worker\Sleep;
  */
 final class SleepInterval
 {
-    public int $microseconds;
-
-    private function __construct(int $microseconds)
+    /**
+     * @param positive-int $microseconds
+     */
+    private function __construct(public int $microseconds)
     {
-        $this->microseconds = $microseconds;
     }
 
     /**
@@ -21,7 +21,7 @@ final class SleepInterval
      */
     public static function fromMicroseconds(int $microseconds): self
     {
-        if ($microseconds < 0) {
+        if ($microseconds <= 0) {
             throw new \InvalidArgumentException('Sleep interval must be zero or positive.');
         }
 
@@ -33,7 +33,7 @@ final class SleepInterval
      */
     public static function fromMilliseconds(int $milliseconds): self
     {
-        if ($milliseconds < 0) {
+        if ($milliseconds <= 0) {
             throw new \InvalidArgumentException('Sleep interval must be zero or positive.');
         }
 
@@ -45,7 +45,7 @@ final class SleepInterval
      */
     public static function fromSeconds(int $seconds): self
     {
-        if ($seconds < 0) {
+        if ($seconds <= 0) {
             throw new \InvalidArgumentException('Sleep interval must be zero or positive.');
         }
 
